@@ -47,6 +47,6 @@ def reward_function(params):
         if direction_diff > math.pi:
             direction_diff = 2 * math.pi - direction_diff
         direction_reward = 1 - direction_diff / math.pi
-        reward += 0.7 * direction_reward
+        reward += 0.8 * direction_reward
 
     return float(reward)
