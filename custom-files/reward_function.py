@@ -13,10 +13,10 @@ def reward_function(params):
     closest_waypoints = params['closest_waypoints']
 
     # Set constant parameters
-    MAX_STEPS = 40
+    MAX_STEPS = 80
 
     # Reward weights
-    center_weight = 0.9
+    center_weight = 0.65
 
     # Reward for staying close to the centerline
     reward = 1 - (distance_from_center / (track_width/2 + 0.01))
@@ -47,6 +47,6 @@ def reward_function(params):
         if direction_diff > math.pi:
             direction_diff = 2 * math.pi - direction_diff
         direction_reward = 1 - direction_diff / math.pi
-        reward += 0.8 * direction_reward
+        reward += 0.9 * direction_reward
 
     return float(reward)
