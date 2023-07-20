@@ -13,7 +13,7 @@ def reward_function(params):
     closest_waypoints = params['closest_waypoints']
 
     # Set constant parameters
-    # MAX_STEPS = 40
+    MAX_STEPS = 40
 
     # Reward weights
     center_weight = 0.9
@@ -34,8 +34,8 @@ def reward_function(params):
         reward += 10
 
     # Penalize if the car takes too many steps (to encourage efficiency)
-    # if steps >= MAX_STEPS:
-    #     reward = 1e-3
+    if steps >= MAX_STEPS:
+        reward = 1e-3
 
     # Additional reward for following waypoints
     if closest_waypoints[1] < len(waypoints):
