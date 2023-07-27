@@ -32,9 +32,8 @@ def pick_plot(waypoint_id: int, plots):
     outer_x = plots[4]
     outer_y = plots[5]
 
-    if waypoint_id % 5 == 0:
-        return [middle_x, middle_y]
-    return [inner_x, inner_y]
+    return [middle_x, middle_y]
+    
 
 
 def print_plot_locations(item):
@@ -52,6 +51,7 @@ def print_plot_locations(item):
 
     print(f"Track Way Points | OUTER: x{outer_x}, y{outer_y} | MIDDLE x{middle_x}, y{middle_y} | INNER x{inner_x}, y{inner_y}")
 
+
 def create_track_waypoints():
     # Track Name
     track_name = "2022_april_open_ccw"
@@ -64,6 +64,8 @@ def create_track_waypoints():
 
     return waypoints
 
+def create_track_from_center_waypoint_and_width(waypoints, width = 0.52963018417358):
+    return
 
 # "Perfect" line is the [[X, Y], ...] co-ordernates of the best line chosen from pick_plot
 perfect_line = []
@@ -87,6 +89,8 @@ for i, point in enumerate(create_track_waypoints()):
     plt.scatter(waypoint_outer[0], waypoint_outer[1], c="blue", s=4, zorder=1)
     plt.scatter(waypoint_middle[0], waypoint_middle[1], c="blue", s=4, zorder=1)
     plt.scatter(waypoint_inner[0], waypoint_inner[1], c="blue", s=4, zorder=1)
+
+print(f"PERFECT PLOTS FOR TRACK {perfect_line}")
 
 # ACTUALLY PLOTS THE LINE HERE (overrides the scatter plotting with line)
 plt.plot(take_plot(perfect_line, "x"), take_plot(perfect_line, "y"), '.r-', zorder=2)
