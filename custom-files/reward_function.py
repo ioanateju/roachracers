@@ -14,7 +14,6 @@ def get_distance_from_waypoint(x, y, waypoint):
 def reward_function(params):
     # Define the maximum distance from the racing line to consider the car on track
     max_waypoint_distance = 0.5
-
     # Extract relevant information from the parameters
     x = params['x']
     y = params['y']
