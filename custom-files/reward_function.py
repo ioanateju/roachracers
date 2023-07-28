@@ -3,12 +3,12 @@ import math
 def reward_function(params):
     # Constants to scale rewards
     line_reward_weight = 0.7
-    angle_reward_weight = 0.3
-    lookahead_window = 5
+    # angle_reward_weight = 0.3
+    # lookahead_window = 5
 
     # Get the car's current position (x, y) and heading angle
     x, y = params['x'], params['y']
-    heading = params['heading']
+    # heading = params['heading']
     all_wheels_on_track = params['all_wheels_on_track']
     speed = params['speed']
 
@@ -17,44 +17,51 @@ def reward_function(params):
 
     # Calculate distance from the car to the predefined line
     def distance_to_line(p1, p2, p3):
+        # P1 is first point
         x1, y1 = p1[0], p1[1]
+        # P2 is second point (next in sequence)
         x2, y2 = p2[0], p2[1]
+        # P3 is current car position
         x3, y3 = p3[0], p3[1]
-
+        
+        # Finding the absolute difference in position for the car???
         numerator = abs((y2 - y1) * x3 - (x2 - x1) * y3 + (x2 * y1) - (y2 * x1))
+        
+        # Finding the position of the targeted and future target of line to compare with car
         denominator = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
         return numerator / denominator
 
     # Find the closest line segment
-    min_distance_to_line = min(distance_to_line(predefined_line[i], predefined_line[i + 1], [x, y])
-                               for i in range(len(predefined_line) - 1))
+    min_distance_to_line = min(distance_to_line(predefined_line[i], predefined_line[i + 1], [x, y]) for i in range(len(predefined_line) - 1))
 
     # Line proximity reward
     line_reward = 1.0 - min_distance_to_line
 
     # Calculate angles between the current target position and the next 'lookahead_window' positions
-    angles = []
-    for i in range(lookahead_window):
-        if i < len(predefined_line) - 1:
-            dx = predefined_line[i + 1][0] - predefined_line[i][0]
-            dy = predefined_line[i + 1][1] - predefined_line[i][1]
-            angle = math.atan2(dy, dx)
-            angles.append(angle)
+    # angles = []
+    # # Each "lookahead" is a point in the premade line
+    # for i in range(lookahead_window):
+    #     if i < len(predefined_line) - 1:
 
-    # Calculate the absolute difference between the car's heading angle and the angles
-    angle_differences = [abs(heading - angle) for angle in angles]
+    #         dx = predefined_line[i + 1][0] - predefined_line[i][0]
+    #         dy = predefined_line[i + 1][1] - predefined_line[i][1]
+    #         angle = math.atan2(dy, dx)
+    #         angles.append(angle)
 
-    # Angle alignment reward
-    angle_reward = 1.0 - min(angle_differences)
+    # # Calculate the absolute difference between the car's heading angle and the angles
+    # angle_differences = [abs(heading - angle) for angle in angles]
+
+    # # Angle alignment reward
+    # angle_reward = 1.0 - min(angle_differences)
 
     # Total reward is a combination of line proximity and angle alignment rewards
-    total_reward = (line_reward_weight * line_reward +
-                    angle_reward_weight * angle_reward)
+    total_reward = (line_reward_weight * line_reward)
+    # total_reward = (line_reward_weight * line_reward + angle_reward_weight * angle_reward)
     
     if not all_wheels_on_track:
         total_reward = 1e-5
 
-    total_reward += speed
+    total_reward *= speed
 
     return float(total_reward)
