@@ -73,6 +73,8 @@ def reward_function(params):
     straight_line_waipoints_groups = group_waypoints_in_straight_lines(waypoints, ANGLE_THRESHOLD)
     turn_angle_weight = 1.5
 
+    reward = 1e-3
+
     # Get reward if completes the lap and more reward if it is faster than benchmark_time    
     if progress == 100:
         if round(steps/15,1)<benchmark_time:
