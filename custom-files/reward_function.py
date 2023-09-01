@@ -2,7 +2,6 @@ import math
 
 
 def reward_function(params):
-
     # waypoint coords
     # closest way point
     # coord of self - makes angle more accurate
@@ -11,7 +10,6 @@ def reward_function(params):
     # get coords of waypoint x ahead
     # calc angle between closest waypoint and waypoint x ahead
     # reward based on how close turnng angle is to calc angle
-
     track_width = params['track_width']
     distance_from_center = params['distance_from_center']
     steering = abs(params['steering_angle'])
@@ -36,7 +34,7 @@ def reward_function(params):
     benchmark_steps=173
     straight_waypoints=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170]
 
-    reward = 1.0
+    reward = 1e-3
     # Get reward if completes the lap and more reward if it is faster than benchmark_time    
     if progress == 100:
         if round(steps/15,1)<benchmark_time:
