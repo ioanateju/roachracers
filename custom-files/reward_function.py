@@ -60,20 +60,23 @@ def reward_function(params):
 
     SPEED_THRESHOLD_2=1.8
     DIRECTION_THRESHOLD = 3.0
-    SPEED_THRESHOLD_1=3.5
+    SPEED_THRESHOLD_1=3
     ANGLE_THRESHOLD = 10.0
     # Read input variables
 
     waypoints = params['waypoints']
     closest_waypoints = params['closest_waypoints']
     heading = params['heading']
-    benchmark_time=14.2
+    benchmark_time=19
     benchmark_steps=173
 
     straight_line_waipoints_groups = group_waypoints_in_straight_lines(waypoints, ANGLE_THRESHOLD)
     turn_angle_weight = 1.5
 
-    reward = 1e-3
+    reward = 1
+
+    # Reward for maintaining speed
+    reward *= speed
 
     # Get reward if completes the lap and more reward if it is faster than benchmark_time    
     if progress == 100:
@@ -82,7 +85,7 @@ def reward_function(params):
         else:
             reward += 100
     elif is_offtrack:
-        reward-=50   
+        reward += 1e-3 
     
     # Calculate the direction of the center line based on the closest waypoints
 
@@ -91,37 +94,28 @@ def reward_function(params):
 
     # Calculate the direction in radius, arctan2(dy, dx), the result is (-pi, pi) in radians
 
-    track_direction = math.atan2(next_point[1] - prev_point[1], next_point[0] - prev_point[0]) 
+    # Additional reward for following waypoints
+    if closest_waypoints[1] < len(waypoints):
+        next_point = waypoints[closest_waypoints[1]]
+        prev_point = waypoints[closest_waypoints[0]]
+        track_direction = math.atan2(next_point[1] - prev_point[1], next_point[0] - prev_point[0])
+        car_direction = params['heading']
+        direction_diff = abs(car_direction - track_direction)
+        if direction_diff > math.pi:
+            direction_diff = 2 * math.pi - direction_diff
+        direction_reward = 1 - direction_diff / math.pi
+        reward += 0.9 * direction_reward
 
-    # Convert to degree
-
-    track_direction = math.degrees(track_direction)
-
-    # Calculate the difference between the track direction and the heading direction of the car
-
-    direction_diff = abs(track_direction - heading)
-
-    # Penalize the reward if the difference is too large
-   
-    direction_bonus=1
-  
-    if direction_diff > DIRECTION_THRESHOLD or not all_wheels_on_track:
-
-        direction_bonus=1-(direction_diff/15)
-        if direction_bonus<0 or direction_bonus>1:
-            direction_bonus = 1e-1
-        reward *= direction_bonus
-    else:
-        if next_point in straight_line_waipoints_groups:
-            if speed>=SPEED_THRESHOLD_1:
-                reward+=max(speed,SPEED_THRESHOLD_1)
-            else:
-                reward+=1e-1
+    if next_point in straight_line_waipoints_groups:
+        if speed>=SPEED_THRESHOLD_1:
+            reward+=max(speed,SPEED_THRESHOLD_1)
         else:
-            if speed<=SPEED_THRESHOLD_2:
-                reward+=max(speed,SPEED_THRESHOLD_2)
-            else:
-                reward+=1e-1
+            reward+=1e-1
+    else:
+        if speed<=SPEED_THRESHOLD_2:
+            reward+=max(speed,SPEED_THRESHOLD_2)
+        else:
+            reward+=1e-1
     
     # Get the waypoints and closest waypoints from params
     # Calculate the angle of the next turn using the function, considering 10 waypoints ahead
@@ -141,6 +135,5 @@ def reward_function(params):
         reward += 10.0
     # Penalize if the car cannot finish the track in less than benchmark_steps
     elif (steps % 50) == 0 and progress < (steps / benchmark_steps) * 100 :
-        reward-=5.0
+        reward += 1e-3
     return reward
-
