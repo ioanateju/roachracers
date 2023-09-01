@@ -1,6 +1,46 @@
 import math
 
 
+def group_waypoints_in_straight_lines(waypoints, angle_threshold_degrees=10.0):
+    straight_line_groups = []
+    current_group = [waypoints[0]]
+    for i in range(1, len(waypoints) - 1):
+        prev_point = waypoints[i - 1]
+        current_point = waypoints[i]
+        next_point = waypoints[i + 1]
+        # Calculate the angles between the points
+        angle1 = math.atan2(current_point[1] - prev_point[1], current_point[0] - prev_point[0])
+        angle2 = math.atan2(next_point[1] - current_point[1], next_point[0] - current_point[0])
+        # Convert angles to degrees
+        angle1_degrees = math.degrees(angle1)
+        angle2_degrees = math.degrees(angle2)
+        # Check if the difference between angles is below the threshold
+        angle_difference = abs(angle2_degrees - angle1_degrees)
+        if angle_difference <= angle_threshold_degrees:
+            current_group.append(current_point)
+        else:
+            straight_line_groups.append(current_group)
+            current_group = [current_point]
+    # Add the last group
+    straight_line_groups.append(current_group)
+    return straight_line_groups
+
+
+def calculate_next_turn_angle(waypoints, closest_waypoints, num_waypoints_ahead=5):
+    # Get the index of the closest waypoint
+    closest_index = closest_waypoints[1]
+    # Extract the closest waypoint
+    closest_waypoint = waypoints[closest_index]
+    # Calculate the angle to the next waypoint 'num_waypoints_ahead' steps ahead
+    target_index = (closest_index + num_waypoints_ahead) % len(waypoints)
+    target_waypoint = waypoints[target_index]
+    # Calculate the angle between the car's current direction and the direction to the target waypoint
+    angle_to_target_waypoint = math.atan2(target_waypoint[1] - closest_waypoint[1], target_waypoint[0] - closest_waypoint[0])
+    # Convert the angle from radians to degrees
+    angle_degrees = math.degrees(angle_to_target_waypoint)
+    return angle_degrees
+
+
 def reward_function(params):
 
     # waypoint coords
@@ -12,21 +52,16 @@ def reward_function(params):
     # calc angle between closest waypoint and waypoint x ahead
     # reward based on how close turnng angle is to calc angle
 
-    track_width = params['track_width']
-    distance_from_center = params['distance_from_center']
-    steering = abs(params['steering_angle'])
-    direction_stearing=params['steering_angle']
     speed = params['speed']
     steps = params['steps']
     is_offtrack=params['is_offtrack']
     progress = params['progress']
     all_wheels_on_track = params['all_wheels_on_track']
-    x = params['x']
-    y = params['y']
 
     SPEED_THRESHOLD_2=1.8
     DIRECTION_THRESHOLD = 3.0
     SPEED_THRESHOLD_1=3.5
+    ANGLE_THRESHOLD = 10.0
     # Read input variables
 
     waypoints = params['waypoints']
@@ -34,8 +69,9 @@ def reward_function(params):
     heading = params['heading']
     benchmark_time=14.2
     benchmark_steps=173
-    straight_waypoints=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170]
 
+    straight_line_waipoints_groups = group_waypoints_in_straight_lines(waypoints, ANGLE_THRESHOLD)
+    turn_angle_weight = 1.5
 
     # Get reward if completes the lap and more reward if it is faster than benchmark_time    
     if progress == 100:
@@ -71,19 +107,32 @@ def reward_function(params):
 
         direction_bonus=1-(direction_diff/15)
         if direction_bonus<0 or direction_bonus>1:
-            direction_bonus = 0
+            direction_bonus = 1e-1
         reward *= direction_bonus
     else:
-        if next_point in (straight_waypoints):
+        if next_point in straight_line_waipoints_groups:
             if speed>=SPEED_THRESHOLD_1:
                 reward+=max(speed,SPEED_THRESHOLD_1)
             else:
-                reward+=1e-3
+                reward+=1e-1
         else:
             if speed<=SPEED_THRESHOLD_2:
                 reward+=max(speed,SPEED_THRESHOLD_2)
             else:
-                reward+=1e-3
+                reward+=1e-1
+    
+    # Get the waypoints and closest waypoints from params
+    # Calculate the angle of the next turn using the function, considering 10 waypoints ahead
+    # reward for turning at the right angle for the upcoming turn
+    next_turn_angle = calculate_next_turn_angle(waypoints, closest_waypoints, num_waypoints_ahead=10)
+
+    if abs(next_turn_angle - heading) > DIRECTION_THRESHOLD or not all_wheels_on_track:
+        direction_bonus=1-(direction_diff/15)
+        if direction_bonus<0 or direction_bonus>1:
+            direction_bonus = 1e-3
+        reward *= direction_bonus
+    else:
+        reward *= turn_angle_weight
     
     # Give additional reward if the car pass every 50 steps faster than expected
     if (steps % 50) == 0 and progress >= (steps / benchmark_steps) * 100 :
