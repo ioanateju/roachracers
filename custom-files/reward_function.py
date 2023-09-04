@@ -126,7 +126,7 @@ def reward_function(params):
     # Get the waypoints and closest waypoints from params
     # Calculate the angle of the next turn using the function, considering 10 waypoints ahead
     # reward for turning at the right angle for the upcoming turn
-    next_turn_angle = calculate_next_turn_angle(waypoints, closest_waypoints, num_waypoints_ahead=10)
+    next_turn_angle = calculate_next_turn_angle(waypoints, closest_waypoints, num_waypoints_ahead=5)
 
     if abs(next_turn_angle - heading) > DIRECTION_THRESHOLD or not all_wheels_on_track:
         direction_bonus=1-(direction_diff/15)
